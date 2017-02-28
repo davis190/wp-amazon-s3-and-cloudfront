@@ -2418,12 +2418,13 @@ class Amazon_S3_And_CloudFront extends AWS_Plugin_Base {
 				$args = array(
 					'region'    => $this->translate_region( $region ),
 					'signature' => 'v4',
+					'version' => '2006-03-01'
 				);
 			} else {
 				$args = array();
 			}
 
-			$client = $this->aws->get_client()->get( 's3', $args );
+			$client = $this->aws->get_client()->createS3( $args );
 			$this->set_client( $client );
 		}
 

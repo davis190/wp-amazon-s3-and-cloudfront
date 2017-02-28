@@ -8,14 +8,38 @@ class AS3CF_Stream_Wrapper extends Aws\S3\StreamWrapper {
 	 * @param Aws\S3\S3Client $client
 	 * @param string          $protocol
 	 */
-	public static function register( Aws\S3\S3Client $client, $protocol = 's3' ) {
+	/*public static function register( Aws\S3\S3Client $client, $protocol = 's3' ) {
 		if ( in_array( $protocol, stream_get_wrappers() ) ) {
 			stream_wrapper_unregister( $protocol );
 		}
 
 		stream_wrapper_register( $protocol, __CLASS__, STREAM_IS_URL );
 		static::$client = $client;
-	}
+	}*/
+	public static function register(
+        AWS\S3\S3ClientInterface $client,
+        $protocol = 's3',
+        AWS\S3\CacheInterface $cache = null
+    ) {
+        if (in_array($protocol, stream_get_wrappers())) {
+            stream_wrapper_unregister($protocol);
+        }
+
+        // Set the client passed in as the default stream context client
+        stream_wrapper_register($protocol, get_called_class(), STREAM_IS_URL);
+        $default = stream_context_get_options(stream_context_get_default());
+        $default[$protocol]['client'] = $client;
+
+        if ($cache) {
+            $default[$protocol]['cache'] = $cache;
+        } elseif (!isset($default[$protocol]['cache'])) {
+            // Set a default cache adapter.
+						// todo: get cache to work
+						//$default[$protocol]['cache'] = new AWS\LruArrayCache();
+        }
+
+        stream_context_set_default($default);
+    }
 
 	/**
 	 * Override the getting the bucket and key from the passed path (e.g. s3://bucket/key)
